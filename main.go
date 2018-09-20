@@ -14,8 +14,8 @@ import (
 	"github.com/labstack/echo/middleware"
 	_ "github.com/weisd/casbin-admin/handlers/admin"
 	_ "github.com/weisd/casbin-admin/handlers/casbin"
-	"github.com/weisd/casbin-admin/middleware/jwt"
 	session "github.com/weisd/casbin-admin/middleware/jwt-session"
+	"github.com/weisd/casbin-admin/middleware/jwt-session/middleware/echo"
 	"github.com/weisd/casbin-admin/router"
 )
 

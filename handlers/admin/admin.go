@@ -7,8 +7,8 @@ import (
 
 	"github.com/labstack/echo"
 	"github.com/weisd/casbin-admin/handlers"
-	"github.com/weisd/casbin-admin/middleware/jwt"
 	session "github.com/weisd/casbin-admin/middleware/jwt-session"
+	"github.com/weisd/casbin-admin/middleware/jwt-session/middleware/echo"
 	"github.com/weisd/casbin-admin/models/admin"
 )
 

@@ -63,8 +63,7 @@ func MiddlewareWithConfig(config Config) echo.MiddlewareFunc {
 				return err
 			}
 
-			if config.Manager.Options().VerifyIP.True() && !cliams.VerifyKey("ip", c.RealIP()) {
-
+			if config.Manager.Options().VerifyIP.True() && !sess.VerifyIP(c.Request()) {
 				return jwt.NewValidationError("ip verify failed", jwt.ValidationErrorMalformed)
 			}
 

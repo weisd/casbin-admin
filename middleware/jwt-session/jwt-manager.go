@@ -5,12 +5,6 @@ import (
 	"strings"
 
 	jwt "github.com/dgrijalva/jwt-go"
-	"github.com/labstack/echo"
-)
-
-// Errors
-var (
-	ErrJWTMissing = echo.NewHTTPError(http.StatusBadRequest, "missing or malformed jwt")
 )
 
 // CAAType CAAType

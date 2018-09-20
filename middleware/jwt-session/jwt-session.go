@@ -2,6 +2,7 @@ package jwt
 
 import (
 	"fmt"
+	"net/http"
 	"time"
 
 	jwt "github.com/dgrijalva/jwt-go"
@@ -98,6 +99,11 @@ func (p *Session) SetData(key string, value interface{}) *Session {
 // GetCliams GetCliams
 func (p *Session) GetCliams() *SessionClaims {
 	return p.Claims.(*SessionClaims)
+}
+
+// VerifyIP VerifyIP
+func (p *Session) VerifyIP(r *http.Request) bool {
+	return p.GetCliams().VerifyKey("ip", RealIP(r))
 }
 
 // Valid Valid
