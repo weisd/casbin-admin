@@ -31,6 +31,8 @@ func main() {
 
 	session.Init(session.Options{
 		// MaxActive:        1,
+		StoreAdapter:     "file",
+		StoreConfig:      "./data",
 		JwtSigningMethod: jwtpkg.SigningMethodHS256,
 		JwtPrivateKey:    []byte("123"),
 	})
@@ -54,7 +56,10 @@ func main() {
 			msg  interface{}
 		)
 
-		if he, ok := err.(*echo.HTTPError); ok {
+		if he, ok := err.(*jwtpkg.ValidationError); ok {
+			code = http.StatusUnauthorized
+			msg = he.Error()
+		} else if he, ok := err.(*echo.HTTPError); ok {
 			code = he.Code
 			msg = he.Message
 		} else if e.Debug {

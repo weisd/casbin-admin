@@ -1,6 +1,7 @@
 package jwt
 
 import (
+	"encoding/binary"
 	"fmt"
 )
 
@@ -8,6 +9,28 @@ import (
 type CaaItem struct {
 	Counter int64
 	Timeout int64
+}
+
+// DecodeCaaItem DecodeCaaItem
+func DecodeCaaItem(b []byte) CaaItem {
+	if len(b) != 16 {
+		return CaaItem{}
+	}
+
+	c := CaaItem{}
+
+	c.Counter = int64(binary.LittleEndian.Uint64(b[0:]))
+	c.Timeout = int64(binary.LittleEndian.Uint64(b[8:]))
+
+	return c
+}
+
+// EncodeCaaItem EncodeCaaItem
+func EncodeCaaItem(c CaaItem) []byte {
+	b := make([]byte, 16)
+	binary.LittleEndian.PutUint64(b[0:], uint64(c.Counter))
+	binary.LittleEndian.PutUint64(b[8:], uint64(c.Timeout))
+	return b
 }
 
 // Store Store

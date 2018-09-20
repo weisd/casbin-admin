@@ -36,9 +36,8 @@ func Login(c echo.Context) error {
 	}
 
 	sess := jwt.Session(c)
-	// sess := session.Manager.NewSession()
 
-	sess.GetCliams().SetAuthor(session.Author{ID: info.ID, Name: info.Name})
+	sess.SetAuthor(session.Author{ID: info.ID, Name: info.Name})
 
 	token, err := sess.SignedString()
 	if err != nil {

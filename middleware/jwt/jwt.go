@@ -1,8 +1,7 @@
 package jwt
 
 import (
-	"net/http"
-
+	jwt "github.com/dgrijalva/jwt-go"
 	"github.com/labstack/echo"
 	"github.com/labstack/echo/middleware"
 	session "github.com/weisd/casbin-admin/middleware/jwt-session"
@@ -66,12 +65,11 @@ func MiddlewareWithConfig(config Config) echo.MiddlewareFunc {
 
 			if config.Manager.Options().VerifyIP.True() && !cliams.VerifyKey("ip", c.RealIP()) {
 
-				c.Logger().Warn("token ip verify faild")
-				valid = false
+				return jwt.NewValidationError("ip verify failed", jwt.ValidationErrorMalformed)
 			}
 
 			if !valid {
-				return echo.NewHTTPError(http.StatusUnauthorized, "session expired")
+				return jwt.NewValidationError("jwt valid failed", jwt.ValidationErrorMalformed)
 			}
 
 			return h(c)

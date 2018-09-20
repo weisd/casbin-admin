@@ -73,24 +73,48 @@ type Session struct {
 	*jwt.Token
 }
 
+// Author Author
+func (p *Session) Author() Author {
+	return p.GetCliams().Author
+}
+
+// SetAuthor  自定义数据
+func (p *Session) SetAuthor(author Author) *Session {
+	p.GetCliams().SetAuthor(author)
+	return p
+}
+
+// Data Data
+func (p *Session) Data() map[string]interface{} {
+	return p.GetCliams().Data
+}
+
+// SetData SetData
+func (p *Session) SetData(key string, value interface{}) *Session {
+	p.GetCliams().SetData(key, value)
+	return p
+}
+
+// GetCliams GetCliams
+func (p *Session) GetCliams() *SessionClaims {
+	return p.Claims.(*SessionClaims)
+}
+
 // Valid Valid
 func (p *Session) Valid() (bool, error) {
-	uid := p.GetCliams().Author.ID
+	uid := p.Author().ID
 	// uid can not be zero
 	if uid == 0 {
-		fmt.Println("id 00 ")
-		return false, nil
+		return false, jwt.NewValidationError("uid == 0", jwt.ValidationErrorMalformed)
 	}
 
 	if !p.Token.Valid {
-		fmt.Println("token expired")
-		return false, nil
+		return false, jwt.NewValidationError("Token.Valid", jwt.ValidationErrorMalformed)
 	}
 
 	// caa类型
 	if p.GetCliams().CAAType != p.opts.CAAType {
-		fmt.Println("caa type err")
-		return false, nil
+		return false, jwt.NewValidationError("CAAType faild", jwt.ValidationErrorMalformed)
 	}
 
 	if p.opts.UseCounter() {
@@ -100,8 +124,13 @@ func (p *Session) Valid() (bool, error) {
 		}
 
 		cp := compandauth.Counter(c)
-		fmt.Println("caa c isvalid ?")
-		return cp.IsValid(p.GetCliams().CAA, int64(p.opts.MaxActive)), nil
+
+		valid := cp.IsValid(p.GetCliams().CAA, int64(p.opts.MaxActive))
+		if !valid {
+			return false, jwt.NewValidationError(fmt.Sprintf("caa counter faild %d+%d=%d", p.GetCliams().CAA, int64(p.opts.MaxActive), cp), jwt.ValidationErrorMalformed)
+		}
+
+		return valid, nil
 	}
 
 	c, err := p.store.GetTimeout(uid)
@@ -110,13 +139,12 @@ func (p *Session) Valid() (bool, error) {
 	}
 
 	cp := compandauth.Timeout(c)
-	fmt.Println("caa isvalid ?", cp, p.GetCliams().CAA, int64(p.opts.MaxAge)*86400)
-	return cp.IsValid(p.GetCliams().CAA, int64(p.opts.MaxAge)*86400), nil
-}
 
-// GetCliams GetCliams
-func (p *Session) GetCliams() *SessionClaims {
-	return p.Claims.(*SessionClaims)
+	valid := cp.IsValid(p.GetCliams().CAA, int64(p.opts.MaxAge)*86400)
+	if !valid {
+		return false, jwt.NewValidationError(fmt.Sprintf("caa timeout faild %d+%d=%d", p.GetCliams().CAA, int64(p.opts.MaxAge)*86400, cp), jwt.ValidationErrorMalformed)
+	}
+	return valid, nil
 }
 
 // SignedString SignedString 生成SignedString
@@ -127,7 +155,7 @@ func (p *Session) SignedString() (string, error) {
 	)
 
 	if p.opts.UseCounter() {
-		c, err := p.store.GetCounter(p.GetCliams().Author.ID)
+		c, err := p.store.GetCounter(p.Author().ID)
 		if err != nil {
 			return "", err
 		}
@@ -136,13 +164,12 @@ func (p *Session) SignedString() (string, error) {
 		// @note 并发登陆的时候，可能会出现多个sessionCAA一样的情况，机率很小
 		p.GetCliams().SetCAA(cp.Issue())
 
-		fmt.Println("use counter", cp)
 		defer func() {
 			// counter 每次登陆+1， 要更新store
-			err = p.store.SetCounter(p.GetCliams().Author.ID, int64(cp))
+			err = p.store.SetCounter(p.Author().ID, int64(cp))
 		}()
 	} else {
-		c, err := p.store.GetTimeout(p.GetCliams().Author.ID)
+		c, err := p.store.GetTimeout(p.Author().ID)
 		if err != nil {
 			return "", err
 		}
@@ -162,11 +189,9 @@ func (p *Session) SignedString() (string, error) {
 		// timout 首次分配时更新就行
 		if hasFirstIssued {
 			defer func() {
-				err = p.store.SetTimeout(p.GetCliams().Author.ID, int64(issueUnix))
+				err = p.store.SetTimeout(p.Author().ID, int64(issueUnix))
 			}()
 		}
-
-		fmt.Println("use timeout", cp)
 
 		p.GetCliams().SetCAA(issueUnix)
 
@@ -194,14 +219,14 @@ func (p *Session) SignedString() (string, error) {
 // Flush Flush
 func (p *Session) Flush() error {
 	var err error
-	uid := p.GetCliams().Author.ID
+	uid := p.Author().ID
 	// uid can not be zero
 	if uid == 0 {
 		return nil
 	}
 
 	if p.opts.UseCounter() {
-		c, err := p.store.GetCounter(p.GetCliams().Author.ID)
+		c, err := p.store.GetCounter(p.Author().ID)
 		if err != nil {
 			return err
 		}
@@ -217,10 +242,10 @@ func (p *Session) Flush() error {
 
 		defer func() {
 			// counter， 要更新store
-			err = p.store.SetCounter(p.GetCliams().Author.ID, int64(cp))
+			err = p.store.SetCounter(p.Author().ID, int64(cp))
 		}()
 	} else {
-		c, err := p.store.GetTimeout(p.GetCliams().Author.ID)
+		c, err := p.store.GetTimeout(p.Author().ID)
 		if err != nil {
 			return err
 		}
