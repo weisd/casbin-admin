@@ -58,7 +58,10 @@ func RealIP(r *http.Request) string {
 }
 
 // MinNight MinNight
-func MinNight() time.Time {
+func MinNight(t ...time.Time) time.Time {
 	n := time.Now()
+	if len(t) > 0 {
+		n = t[0]
+	}
 	return time.Date(n.Year(), n.Month(), n.Day(), 3, 0, 0, 0, time.Local)
 }

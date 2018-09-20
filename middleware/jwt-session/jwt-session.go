@@ -1,6 +1,9 @@
 package jwt
 
 import (
+	"fmt"
+	"time"
+
 	jwt "github.com/dgrijalva/jwt-go"
 	"github.com/endiangroup/compandauth"
 )
@@ -11,22 +14,13 @@ type Author struct {
 	Name string
 }
 
-// // DefaultSesstionOptions 默认jwt配置
-// var DefaultSesstionOptions = NewSessionOptions()
-
-// // SessionOptions SessionOptions
-// type SessionOptions struct {
-// 	JwtSigningMethod        jwt.SigningMethod // jwt 算法
-// 	JwtPrivateKey string            // 只需要一个的时候存这
-// 	JwtPublicKey  string            //
-// }
-
 // SessionClaims SessionClaims
 type SessionClaims struct {
-	Author Author
-	CAA    compandauth.SessionCAA // 记录有效用户序号
-	Verify map[string]interface{} // 验证数据，默认存ip,host
-	Data   map[string]interface{} // 用户自定义数据
+	Author  Author
+	CAAType CAAType
+	CAA     compandauth.SessionCAA // 记录有效用户序号
+	Verify  map[string]interface{} // 验证数据，默认存ip,host
+	Data    map[string]interface{} // 用户自定义数据
 	jwt.StandardClaims
 }
 
@@ -38,7 +32,7 @@ func NewSessionClaims() *SessionClaims {
 	}
 }
 
-// SetAuth  自定义数据
+// SetAuthor  自定义数据
 func (p *SessionClaims) SetAuthor(author Author) *SessionClaims {
 	p.Author = author
 	return p
@@ -79,15 +73,23 @@ type Session struct {
 	*jwt.Token
 }
 
-// Vaild Vaild
-func (p *Session) Vaild() (bool, error) {
+// Valid Valid
+func (p *Session) Valid() (bool, error) {
 	uid := p.GetCliams().Author.ID
 	// uid can not be zero
 	if uid == 0 {
+		fmt.Println("id 00 ")
 		return false, nil
 	}
 
 	if !p.Token.Valid {
+		fmt.Println("token expired")
+		return false, nil
+	}
+
+	// caa类型
+	if p.GetCliams().CAAType != p.opts.CAAType {
+		fmt.Println("caa type err")
 		return false, nil
 	}
 
@@ -98,6 +100,7 @@ func (p *Session) Vaild() (bool, error) {
 		}
 
 		cp := compandauth.Counter(c)
+		fmt.Println("caa c isvalid ?")
 		return cp.IsValid(p.GetCliams().CAA, int64(p.opts.MaxActive)), nil
 	}
 
@@ -107,9 +110,8 @@ func (p *Session) Vaild() (bool, error) {
 	}
 
 	cp := compandauth.Timeout(c)
-
-	return cp.IsValid(compandauth.SessionCAA(p.GetCliams().IssuedAt), int64(p.opts.MaxAge)*86400), nil
-
+	fmt.Println("caa isvalid ?", cp, p.GetCliams().CAA, int64(p.opts.MaxAge)*86400)
+	return cp.IsValid(p.GetCliams().CAA, int64(p.opts.MaxAge)*86400), nil
 }
 
 // GetCliams GetCliams
@@ -134,6 +136,7 @@ func (p *Session) SignedString() (string, error) {
 		// @note 并发登陆的时候，可能会出现多个sessionCAA一样的情况，机率很小
 		p.GetCliams().SetCAA(cp.Issue())
 
+		fmt.Println("use counter", cp)
 		defer func() {
 			// counter 每次登陆+1， 要更新store
 			err = p.store.SetCounter(p.GetCliams().Author.ID, int64(cp))
@@ -146,23 +149,39 @@ func (p *Session) SignedString() (string, error) {
 
 		cp := compandauth.Timeout(c)
 
-		// timout 首次分配时更新就行
-		if !cp.HasIssued() {
+		// 是否首次分配
+		hasFirstIssued := !cp.HasIssued()
 
+		issueUnix := cp.Issue()
+
+		if hasFirstIssued && p.opts.MinNight.True() {
+			t := time.Unix(int64(issueUnix), 0)
+			issueUnix = compandauth.SessionCAA(MinNight(t).Unix())
+		}
+
+		// timout 首次分配时更新就行
+		if hasFirstIssued {
 			defer func() {
-				err = p.store.SetTimeout(p.GetCliams().Author.ID, int64(cp))
+				err = p.store.SetTimeout(p.GetCliams().Author.ID, int64(issueUnix))
 			}()
 		}
 
-		// @note 并发登陆的时候，可能会出现多个sessionCAA一样的情况，机率很小
-		p.GetCliams().SetCAA(cp.Issue())
+		fmt.Println("use timeout", cp)
+
+		p.GetCliams().SetCAA(issueUnix)
 
 	}
 
-	// 过期时间 至 第二天3点
+	var startTime time.Time
 
-	p.GetCliams().ExpiresAt = MinNight().AddDate(0, 0, p.opts.MaxAge).Unix()
-	p.GetCliams().IssuedAt = MinNight().Unix() // 对齐到MinNight
+	if p.opts.MinNight.True() {
+		startTime = MinNight()
+	} else {
+		startTime = time.Now()
+	}
+
+	p.GetCliams().ExpiresAt = startTime.AddDate(0, 0, p.opts.MaxAge).Unix()
+	p.GetCliams().IssuedAt = time.Now().Unix()
 
 	token, err = p.Token.SignedString(p.opts.GetSignKey(p.opts.JwtSigningMethod))
 	if err != nil {

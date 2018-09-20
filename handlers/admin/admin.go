@@ -7,9 +7,9 @@ import (
 
 	"github.com/labstack/echo"
 	"github.com/weisd/casbin-admin/handlers"
-	"github.com/weisd/casbin-admin/models/admin"
-
+	"github.com/weisd/casbin-admin/middleware/jwt"
 	session "github.com/weisd/casbin-admin/middleware/jwt-session"
+	"github.com/weisd/casbin-admin/models/admin"
 )
 
 // Login Login
@@ -35,7 +35,8 @@ func Login(c echo.Context) error {
 		return handlers.NewError(404, "User Not Found or Wrong Password1")
 	}
 
-	sess := session.Manager.NewSession()
+	sess := jwt.Session(c)
+	// sess := session.Manager.NewSession()
 
 	sess.GetCliams().SetAuthor(session.Author{ID: info.ID, Name: info.Name})
 

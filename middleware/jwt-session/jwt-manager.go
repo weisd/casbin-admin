@@ -13,6 +13,36 @@ var (
 	ErrJWTMissing = echo.NewHTTPError(http.StatusBadRequest, "missing or malformed jwt")
 )
 
+// CAAType CAAType
+type CAAType byte
+
+// Bool Bool
+type Bool byte
+
+const (
+	// CAATypeCounter CAATypeCounter
+	CAATypeCounter CAAType = 1
+	// CAATypeTimeout CAATypeTimeout
+	CAATypeTimeout CAAType = 2
+
+	// BoolUndefined BoolUndefined
+	BoolUndefined Bool = 0
+	// BoolTrue BoolTrue
+	BoolTrue Bool = 1
+	// BoolFalse BoolFalse
+	BoolFalse Bool = 2
+)
+
+// True True
+func (p Bool) True() bool {
+	return p == BoolTrue
+}
+
+// False False
+func (p Bool) False() bool {
+	return p == BoolFalse
+}
+
 // SessionManager SessionManager
 type SessionManager struct {
 	store Store
@@ -21,8 +51,9 @@ type SessionManager struct {
 
 // Options Options
 type Options struct {
-	MaxActive int // 同一uid 有效jwt数量 默认：0 无限
-	MaxAge    int // jwt 有效天数   默认：3天 0点到期
+	CAAType   CAAType // 1 counter, 2 timeout
+	MaxActive int     // 同一uid 有效jwt数量 默认：1
+	MaxAge    int     // jwt 有效天数   默认：3天 0点到期
 
 	// StoreEnable  bool   // session更新失效机制需要开户store
 	StoreAdapter string // store 存储方式 mysql,redis,memory,file...
@@ -40,11 +71,30 @@ type Options struct {
 	JwtSigningMethod jwt.SigningMethod // jwt 算法
 	JwtPrivateKey    []byte            // 只需要一个的时候存这
 	JwtPublicKey     []byte            //
+
+	VerifyIP Bool // 是否验证ip
+	MinNight Bool // 是否调整过期时间到午夜
 }
 
 func preOptions(opts *Options) {
 	if opts.MaxAge == 0 {
 		opts.MaxAge = 3
+	}
+
+	if opts.CAAType == 0 {
+		opts.CAAType = CAATypeTimeout
+	}
+
+	if opts.CAAType == CAATypeCounter && opts.MaxActive == 0 {
+		opts.MaxActive = 1
+	}
+
+	if opts.VerifyIP == BoolUndefined {
+		opts.VerifyIP = BoolTrue
+	}
+
+	if opts.MinNight == BoolUndefined {
+		opts.MinNight = BoolTrue
 	}
 
 	if len(opts.StoreAdapter) == 0 {
@@ -69,10 +119,12 @@ func preOptions(opts *Options) {
 
 }
 
+// UseCounter UseCounter
 func (p Options) UseCounter() bool {
-	return p.MaxActive > 0
+	return p.CAAType == CAATypeCounter
 }
 
+// GetSignKey GetSignKey
 func (p Options) GetSignKey(alg jwt.SigningMethod) []byte {
 	switch alg {
 	case jwt.SigningMethodHS256, jwt.SigningMethodHS384, jwt.SigningMethodHS512:
@@ -85,6 +137,7 @@ func (p Options) GetSignKey(alg jwt.SigningMethod) []byte {
 	}
 }
 
+// GetVerifyKey GetVerifyKey
 func (p Options) GetVerifyKey(alg jwt.SigningMethod) []byte {
 	switch alg {
 	case jwt.SigningMethodHS256, jwt.SigningMethodHS384, jwt.SigningMethodHS512:
@@ -113,6 +166,11 @@ func NewSessionManger(opts ...Options) *SessionManager {
 	return m
 }
 
+// Options Options
+func (p *SessionManager) Options() Options {
+	return p.opts
+}
+
 // GetSession GetSession
 func (p *SessionManager) GetSession(r *http.Request) (*Session, error) {
 	// 从header中取到jwt
@@ -130,7 +188,13 @@ func (p *SessionManager) GetSession(r *http.Request) (*Session, error) {
 
 	var token *jwt.Token
 	if len(tokenString) == 0 {
-		token = jwt.NewWithClaims(p.opts.JwtSigningMethod, NewSessionClaims())
+
+		claims := NewSessionClaims()
+		claims.CAAType = p.opts.CAAType
+		claims.SetVerify("ip", RealIP(r))
+
+		token = jwt.NewWithClaims(p.opts.JwtSigningMethod, claims)
+
 	} else {
 		var err error
 		token, err = p.ParseJWT(tokenString)
@@ -139,9 +203,11 @@ func (p *SessionManager) GetSession(r *http.Request) (*Session, error) {
 		}
 	}
 
-	sess := p.NewSession(token)
-	sess.GetCliams().SetVerify("ip", RealIP(r))
-	return sess, nil
+	return &Session{
+		store: p.store,
+		opts:  p.opts,
+		Token: token,
+	}, nil
 
 }
 
@@ -152,19 +218,4 @@ func (p *SessionManager) ParseJWT(tokenString string) (*jwt.Token, error) {
 	})
 
 	return token, err
-}
-
-// NewSession NewSession
-func (p *SessionManager) NewSession(token ...*jwt.Token) *Session {
-	var t *jwt.Token
-	if len(token) > 0 {
-		t = token[0]
-	} else {
-		t = jwt.NewWithClaims(p.opts.JwtSigningMethod, NewSessionClaims())
-	}
-	return &Session{
-		store: p.store,
-		opts:  p.opts,
-		Token: t,
-	}
 }

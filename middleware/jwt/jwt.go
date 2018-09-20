@@ -1,6 +1,8 @@
 package jwt
 
 import (
+	"net/http"
+
 	"github.com/labstack/echo"
 	"github.com/labstack/echo/middleware"
 	session "github.com/weisd/casbin-admin/middleware/jwt-session"
@@ -38,9 +40,6 @@ func MiddlewareWithConfig(config Config) echo.MiddlewareFunc {
 
 	return func(h echo.HandlerFunc) echo.HandlerFunc {
 		return func(c echo.Context) error {
-			if config.Skipper(c) {
-				return h(c)
-			}
 
 			sess, err := config.Manager.GetSession(c.Request())
 			if err != nil {
@@ -49,11 +48,31 @@ func MiddlewareWithConfig(config Config) echo.MiddlewareFunc {
 
 			cliams := sess.GetCliams()
 
-			c.Logger().Debug("cliams:", cliams.Author, cliams.Data, cliams.Verify, cliams.CAA)
+			c.Logger().Debug("cliams:", c.RealIP(), cliams.Author, cliams.Data, cliams.Verify, cliams.CAA)
+
+			// 永远传递session
+			c.Set(ContextKey, sess)
+
+			// 过滤验证
+			if config.Skipper(c) {
+				return h(c)
+			}
 
 			// 验证
+			valid, err := sess.Valid()
+			if err != nil {
+				return err
+			}
 
-			c.Set(ContextKey, cliams)
+			if config.Manager.Options().VerifyIP.True() && !cliams.VerifyKey("ip", c.RealIP()) {
+
+				c.Logger().Warn("token ip verify faild")
+				valid = false
+			}
+
+			if !valid {
+				return echo.NewHTTPError(http.StatusUnauthorized, "session expired")
+			}
 
 			return h(c)
 
@@ -62,12 +81,12 @@ func MiddlewareWithConfig(config Config) echo.MiddlewareFunc {
 
 }
 
-// Cliams Cliams
-func Cliams(c echo.Context) *session.SessionClaims {
+// Session Session
+func Session(c echo.Context) *session.Session {
 	f := c.Get(ContextKey)
 	if f == nil {
-		return session.NewSessionClaims()
+		panic("session context not found")
 	}
 
-	return f.(*session.SessionClaims)
+	return f.(*session.Session)
 }

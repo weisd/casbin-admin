@@ -30,11 +30,21 @@ func main() {
 	// e.Pre(middleware.AddTrailingSlash())
 
 	session.Init(session.Options{
+		// MaxActive:        1,
 		JwtSigningMethod: jwtpkg.SigningMethodHS256,
-		JwtPrivateKey:[]byte("123"),
+		JwtPrivateKey:    []byte("123"),
 	})
 
-	e.Use(jwt.Middleware(session.Manager))
+	e.Use(jwt.MiddlewareWithConfig(jwt.Config{
+		Manager: session.Manager,
+		Skipper: func(c echo.Context) bool {
+			if c.Request().URL.Path == "/user/login" {
+				return true
+			}
+
+			return false
+		},
+	}))
 
 	e.Debug = true
 
