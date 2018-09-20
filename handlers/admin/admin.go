@@ -26,30 +26,33 @@ func Login(c echo.Context) error {
 		return errors.Wrap(err, "Login.InfoByAccount")
 	}
 	if info == nil {
-		return handlers.NewError(404, "User Not Found or Wrong Password")
+		return handlers.NewError(401, "User Not Found or Wrong Password")
 	}
 
 	c.Logger().Debug("Login.info", info)
 
 	if !admin.CheckPasswd(info, args.Passwd) {
-		return handlers.NewError(404, "User Not Found or Wrong Password1")
+		return handlers.NewError(401, "User Not Found or Wrong Password1")
 	}
 
 	sess := jwt.Session(c)
 
-	sess.SetAuthor(session.Author{ID: info.ID, Name: info.Name})
+	sess.SetAuthor(session.Author{ID: info.ID, Name: info.Name, Avator: "https://avatars3.githubusercontent.com/u/2057561?s=460&v=4"})
 
 	token, err := sess.SignedString()
 	if err != nil {
 		return err
 	}
 
-	return c.JSON(http.StatusOK, token)
+	return c.JSON(http.StatusOK, LoginResp{Token: token})
 }
 
 // Logout Logout
 func Logout(c echo.Context) error {
-	return c.JSON(http.StatusOK, "Logout")
+	sess := jwt.Session(c)
+	c.Logger().Info(sess.Author())
+	sess.Flush()
+	return c.JSON(http.StatusOK, nil)
 }
 
 // Add Add

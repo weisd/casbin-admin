@@ -14,6 +14,7 @@ import (
 	"github.com/gocommon/jwt-session-middleware/echo"
 	"github.com/labstack/echo"
 	"github.com/labstack/echo/middleware"
+	"github.com/weisd/casbin-admin/handlers"
 	_ "github.com/weisd/casbin-admin/handlers/admin"
 	_ "github.com/weisd/casbin-admin/handlers/casbin"
 	"github.com/weisd/casbin-admin/router"
@@ -28,6 +29,7 @@ func main() {
 	e.Use(middleware.Recover())
 	e.Use(middleware.Gzip())
 	// e.Pre(middleware.AddTrailingSlash())
+	e.Use(middleware.CORS())
 
 	session.Init(session.Options{
 		// MaxActive:        1,
@@ -56,7 +58,10 @@ func main() {
 			msg  interface{}
 		)
 
-		if he, ok := err.(*jwtpkg.ValidationError); ok {
+		if he, ok := err.(*handlers.APIErr); ok {
+			// code = http.StatusOK
+			msg = he.Error()
+		} else if he, ok := err.(*jwtpkg.ValidationError); ok {
 			code = http.StatusUnauthorized
 			msg = he.Error()
 		} else if he, ok := err.(*echo.HTTPError); ok {

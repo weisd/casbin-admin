@@ -18,6 +18,16 @@ github.com/gocommon/jwt-session v0.0.0-20180920061136-86b1582fe51d h1:9zkljjr6zd
 github.com/gocommon/jwt-session v0.0.0-20180920061136-86b1582fe51d/go.mod h1:SnKAIktit95CPFsoBeZiJhqMe2sN8AdJ+LYAlXODneM=
 github.com/gocommon/jwt-session v0.0.0-20180920063204-999ae487f31e h1:EJOF5nLrIrpiexBp1p21Hw4hC3kfolOEA+U7hOi//R8=
 github.com/gocommon/jwt-session v0.0.0-20180920063204-999ae487f31e/go.mod h1:SnKAIktit95CPFsoBeZiJhqMe2sN8AdJ+LYAlXODneM=
+github.com/gocommon/jwt-session v0.0.0-20180920101904-d594a52566c9 h1:evtvclmVlOQ/eumcyerbrFYmwmQ4QmVC4W4F5s6c3M8=
+github.com/gocommon/jwt-session v0.0.0-20180920101904-d594a52566c9/go.mod h1:SnKAIktit95CPFsoBeZiJhqMe2sN8AdJ+LYAlXODneM=
+github.com/gocommon/jwt-session v0.0.0-20180920132431-1feb2f89eebb h1:e3RBV8m6h56ZkCUYDfHHdbljQMIzqqDHdY+ILnTL8sw=
+github.com/gocommon/jwt-session v0.0.0-20180920132431-1feb2f89eebb/go.mod h1:SnKAIktit95CPFsoBeZiJhqMe2sN8AdJ+LYAlXODneM=
+github.com/gocommon/jwt-session v0.0.0-20180920132836-5371018b2687 h1:Wnm6tZkEhNNug+VZYkt/YlrtMCcBQ0lxSC5mL7Xnbww=
+github.com/gocommon/jwt-session v0.0.0-20180920132836-5371018b2687/go.mod h1:SnKAIktit95CPFsoBeZiJhqMe2sN8AdJ+LYAlXODneM=
+github.com/gocommon/jwt-session v0.0.0-20180920133711-fa9e76ad6297 h1:uhnJ+YvzQWg1o8UAFWCsdGKI2+PiV6KqvREpeqjK2kM=
+github.com/gocommon/jwt-session v0.0.0-20180920133711-fa9e76ad6297/go.mod h1:SnKAIktit95CPFsoBeZiJhqMe2sN8AdJ+LYAlXODneM=
+github.com/gocommon/jwt-session v0.0.0-20180920134226-281f1fc5fa15 h1:mGGxqy34wykbybgx3JAMfVYjJeKLFELC/gYlAaol2eM=
+github.com/gocommon/jwt-session v0.0.0-20180920134226-281f1fc5fa15/go.mod h1:SnKAIktit95CPFsoBeZiJhqMe2sN8AdJ+LYAlXODneM=
 github.com/gocommon/jwt-session-middleware v0.0.0-20180920061834-4a6de87717d8 h1:PIbRqAgFMj2ZjG7eb1pkdGt1+3CfmO8TjhNOJbs5X84=
 github.com/gocommon/jwt-session-middleware v0.0.0-20180920061834-4a6de87717d8/go.mod h1:JUkXvASj9J78bCviJZM+nfd9zl9VrDoS0HqAen9KipM=
 github.com/jinzhu/gorm v1.9.1 h1:lDSDtsCt5AGGSKTs8AHlSDbbgif4G4+CKJ8ETBDVHTA=
