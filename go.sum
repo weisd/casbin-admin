@@ -16,6 +16,8 @@ github.com/go-sql-driver/mysql v1.4.0 h1:7LxgVwFb2hIQtMm87NdgAVfXjnt4OePseqT1tKx
 github.com/go-sql-driver/mysql v1.4.0/go.mod h1:zAC/RDZ24gD3HViQzih4MyKcchzm+sOG5ZlKdlhCg5w=
 github.com/gocommon/jwt-session v0.0.0-20180920061136-86b1582fe51d h1:9zkljjr6zd9LfXCZTkeAZn36+Q2vy7Jh42ggWao59GA=
 github.com/gocommon/jwt-session v0.0.0-20180920061136-86b1582fe51d/go.mod h1:SnKAIktit95CPFsoBeZiJhqMe2sN8AdJ+LYAlXODneM=
+github.com/gocommon/jwt-session v0.0.0-20180920063204-999ae487f31e h1:EJOF5nLrIrpiexBp1p21Hw4hC3kfolOEA+U7hOi//R8=
+github.com/gocommon/jwt-session v0.0.0-20180920063204-999ae487f31e/go.mod h1:SnKAIktit95CPFsoBeZiJhqMe2sN8AdJ+LYAlXODneM=
 github.com/gocommon/jwt-session-middleware v0.0.0-20180920061834-4a6de87717d8 h1:PIbRqAgFMj2ZjG7eb1pkdGt1+3CfmO8TjhNOJbs5X84=
 github.com/gocommon/jwt-session-middleware v0.0.0-20180920061834-4a6de87717d8/go.mod h1:JUkXvASj9J78bCviJZM+nfd9zl9VrDoS0HqAen9KipM=
 github.com/jinzhu/gorm v1.9.1 h1:lDSDtsCt5AGGSKTs8AHlSDbbgif4G4+CKJ8ETBDVHTA=
