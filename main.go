@@ -10,12 +10,12 @@ import (
 	"github.com/labstack/gommon/log"
 
 	jwtpkg "github.com/dgrijalva/jwt-go"
+	session "github.com/gocommon/jwt-session"
+	"github.com/gocommon/jwt-session-middleware/echo"
 	"github.com/labstack/echo"
 	"github.com/labstack/echo/middleware"
 	_ "github.com/weisd/casbin-admin/handlers/admin"
 	_ "github.com/weisd/casbin-admin/handlers/casbin"
-	session "github.com/weisd/casbin-admin/middleware/jwt-session"
-	"github.com/weisd/casbin-admin/middleware/jwt-session/middleware/echo"
 	"github.com/weisd/casbin-admin/router"
 )
 

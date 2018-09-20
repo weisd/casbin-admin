@@ -9,6 +9,8 @@ require (
 	github.com/go-playground/locales v0.12.1 // indirect
 	github.com/go-playground/universal-translator v0.16.0 // indirect
 	github.com/go-sql-driver/mysql v1.4.0
+	github.com/gocommon/jwt-session v0.0.0-20180920061136-86b1582fe51d
+	github.com/gocommon/jwt-session-middleware v0.0.0-20180920061834-4a6de87717d8
 	github.com/jinzhu/gorm v1.9.1
 	github.com/jinzhu/inflection v0.0.0-20180308033659-04140366298a // indirect
 	github.com/labstack/echo v3.2.1+incompatible
