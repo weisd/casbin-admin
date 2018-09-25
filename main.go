@@ -59,7 +59,7 @@ func main() {
 		)
 
 		if he, ok := err.(*handlers.APIErr); ok {
-			// code = http.StatusOK
+			code = http.StatusBadRequest
 			msg = he.Error()
 		} else if he, ok := err.(*jwtpkg.ValidationError); ok {
 			code = http.StatusUnauthorized

@@ -10,9 +10,14 @@ func init() {
 // routers routers
 func routers(e *echo.Echo) {
 	r := e.Group("user")
+
+	r.GET("", Index)
+	r.GET("/info", Info)
+
 	r.POST("/login", Login)
 	r.POST("/logout", Logout)
 	r.POST("/add", Add)
-	r.POST("/update/name", UpdateName)
+	r.POST("/update", Update)
 	r.POST("/update/pwd", UpdatePwd)
+
 }

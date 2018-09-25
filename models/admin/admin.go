@@ -103,6 +103,17 @@ func Create(info *CasbinAdmin) error {
 	return nil
 }
 
+// Update Update
+func Update(info *CasbinAdmin) error {
+
+	g := models.DB.Save(info)
+	if g.Error != nil {
+		return g.Error
+	}
+
+	return nil
+}
+
 // UpdateName UpdateName
 func UpdateName(id int64, name string) error {
 	g := models.DB.Model(&CasbinAdmin{}).Where("id = ?", id).Update("name", name)
@@ -135,4 +146,15 @@ func UpdateStatus(id int64, status int32) error {
 	}
 
 	return nil
+}
+
+// ListSearch ListSearch
+func ListSearch(query string, args []interface{}, ex models.SQLEx) ([]*CasbinAdmin, error) {
+	list := make([]*CasbinAdmin, 0)
+
+	if err := models.DB.Where(query, args...).Order(ex.Order).Limit(ex.Limit).Find(&list).Error; err != nil {
+		return nil, err
+	}
+
+	return list, nil
 }
