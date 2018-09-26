@@ -17,13 +17,14 @@ func routers(e *echo.Echo) {
 	c.POST("/enforce", Enforce)
 
 	p := c.Group("/permission")
-	p.POST("/list", PermissionList)
+	p.GET("/list", PermissionList)
 	p.POST("/add", PermissionAdd)
 	p.POST("/del", PermissionDel)
 
 	r := c.Group("/role")
-	r.POST("/list", RoleList)
-	r.POST("/permission/list", RolePermissions)
+	r.GET("/list", RoleList)
+	r.GET("/user", RoleUserList)
+	r.GET("/permission/list", RolePermissions)
 	r.POST("/permission/add", RolePermissionAdd)
 	r.POST("/permission/del", RolePermissionDel)
 

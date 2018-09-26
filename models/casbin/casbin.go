@@ -65,9 +65,9 @@ func (e *Enforcer) Enforce(req *Request) bool {
 }
 
 // GetRoles GetRoles
-func (e *Enforcer) GetRoles() []*RolePermission {
+func (e *Enforcer) GetRoles() []string {
 
-	list := make([]*RolePermission, 0)
+	m := map[string]struct{}{}
 
 	groupPolicys := e.SyncedEnforcer.GetNamedGroupingPolicy("g")
 	for i := range groupPolicys {
@@ -78,9 +78,85 @@ func (e *Enforcer) GetRoles() []*RolePermission {
 			continue
 		}
 
-		list = append(list, r)
+		m[r.Role] = struct{}{}
+
 	}
 
+	list := make([]string, 0, len(m))
+	for k := range m {
+		list = append(list, k)
+	}
+
+	return list
+}
+
+// GetRoleUsers GetRoleUsers
+func (e *Enforcer) GetRoleUsers() []string {
+
+	m := map[string]struct{}{}
+
+	groupPolicys := e.SyncedEnforcer.GetNamedGroupingPolicy("g")
+	for i := range groupPolicys {
+		r := &RolePermission{}
+		r.Parse(groupPolicys[i])
+
+		if isInt(r.Role) {
+			m[r.Role] = struct{}{}
+		}
+	}
+
+	list := make([]string, 0, len(m))
+	for k := range m {
+		list = append(list, k)
+	}
+
+	return list
+}
+
+// RolePermissionList RolePermissionList
+func (e *Enforcer) RolePermissionList(role string) []*Permission {
+
+	list := make([]*Permission, 0)
+
+	roles := e.GetRolesForUser(role)
+	for _, v := range roles {
+		permission := e.PermissionInfoByName(v)
+		if permission != nil {
+			list = append(list, permission)
+		}
+	}
+
+	return list
+
+}
+
+// PermissionExists PermissionExists
+func (e *Enforcer) PermissionExists(name string) bool {
+	return len(e.SyncedEnforcer.GetFilteredPolicy(0, name)) > 0
+}
+
+// PermissionInfoByName PermissionInfoByName
+func (e *Enforcer) PermissionInfoByName(name string) *Permission {
+	permission := e.SyncedEnforcer.GetFilteredPolicy(0, name)
+
+	if len(permission) > 0 {
+		info := &Permission{}
+		info.Parse(permission[0])
+		return info
+	}
+	return nil
+}
+
+// RolePermissionListByPermission RolePermissionListByPermission
+func (e *Enforcer) RolePermissionListByPermission(name string) []*RolePermission {
+	permission := e.SyncedEnforcer.GetFilteredGroupingPolicy(1, name)
+
+	list := make([]*RolePermission, len(permission))
+	for i := range permission {
+		info := &RolePermission{}
+		info.Parse(permission[i])
+		list[i] = info
+	}
 	return list
 }
 

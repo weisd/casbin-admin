@@ -47,3 +47,9 @@ type Request struct {
 	Method string `json:"method" form:"method" query:"method"`
 	Origin string `json:"origin" form:"origin" query:"origin"`
 }
+
+// RolePermissionList RolePermissionList
+type RolePermissionList struct {
+	Role           string        `json:"role" form:"role" query:"role"`
+	PermissionList []*Permission `json:"permission_list" form:"permission_list" query:"permission_list"`
+}
