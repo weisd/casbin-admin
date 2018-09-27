@@ -219,10 +219,10 @@ func (e *Enforcer) DeleteRoleByName(name string) bool {
 
 // UserPermissions UserPermissions
 func (e *Enforcer) UserPermissions(uid int64) []*Permission {
-	permission = e.SyncedEnforcer.GetPermissionsForUser(strconv.FormatInt(uid, 10))
-	list := make([]*RolePermission, len(permission))
+	permission := e.SyncedEnforcer.GetPermissionsForUser(strconv.FormatInt(uid, 10))
+	list := make([]*Permission, len(permission))
 	for i := range permission {
-		info := &RolePermission{}
+		info := &Permission{}
 		info.Parse(permission[i])
 		list[i] = info
 	}

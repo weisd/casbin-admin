@@ -272,28 +272,28 @@ func UserPermissions(c echo.Context) error {
 	return c.JSON(http.StatusOK, casbin.Enfc.UserPermissions(args.UID))
 
 	// uid->role
-	roles := casbin.Enfc.GetRolesForUser(uid)
+	// roles := casbin.Enfc.GetRolesForUser(uid)
 
-	permissions := make([]*casbin.Permission, 0)
+	// permissions := make([]*casbin.Permission, 0)
 
-	for i := range roles {
+	// for i := range roles {
 
-		//  role->permission
-		rolePermissions := casbin.Enfc.GetRolesForUser(roles[i])
+	// 	//  role->permission
+	// 	rolePermissions := casbin.Enfc.GetRolesForUser(roles[i])
 
-		for j := range rolePermissions {
-			ps := casbin.Enfc.GetPermissionsForUser(rolePermissions[j])
-			for k := range ps {
-				p := &casbin.Permission{}
-				p.Parse(ps[k])
-				permissions = append(permissions, p)
-			}
+	// 	for j := range rolePermissions {
+	// 		ps := casbin.Enfc.GetPermissionsForUser(rolePermissions[j])
+	// 		for k := range ps {
+	// 			p := &casbin.Permission{}
+	// 			p.Parse(ps[k])
+	// 			permissions = append(permissions, p)
+	// 		}
 
-		}
+	// 	}
 
-	}
+	// }
 
-	return c.JSON(http.StatusOK, permissions)
+	// return c.JSON(http.StatusOK, permissions)
 }
 
 // Enforce Enforce
