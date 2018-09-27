@@ -2,6 +2,7 @@ package casbin
 
 import (
 	"net/http"
+	"strconv"
 	"strings"
 
 	"github.com/labstack/echo"
@@ -165,15 +166,20 @@ func RolePermissionDel(c echo.Context) error {
 
 // RoleUserList RoleUserList 所有用户角色
 func RoleUserList(c echo.Context) error {
-	return c.JSON(http.StatusOK, casbin.Enfc.GetRolesForUser(uid))
+	return c.JSON(http.StatusOK, casbin.Enfc.GetRoleUsers())
 }
 
 // UserRoles UserRoles
 func UserRoles(c echo.Context) error {
 
-	uid := c.FormValue("uid")
+	args := &casbin.UserRole{}
+	if err := c.Bind(args); err != nil {
+		return err
+	}
 
-	return c.JSON(http.StatusOK, casbin.Enfc.GetRolesForUser(uid))
+	c.Logger().Debug("UserRoles args", args)
+
+	return c.JSON(http.StatusOK, casbin.Enfc.GetRolesForUser(strconv.FormatInt(args.UID, 10)))
 }
 
 // UserRoleAdd UserRoleAdd
@@ -183,27 +189,87 @@ func UserRoleAdd(c echo.Context) error {
 		return err
 	}
 
+	roleList := strings.Split(args.Role, ",")
+
+	sUID := strconv.FormatInt(args.UID, 10)
+
+	// 取旧值
+	oldList := casbin.Enfc.GetRolesForUser(sUID)
+
+	delList := []string{}
+
+	for _, oldInfo := range oldList {
+		var in bool
+		for _, newName := range roleList {
+			if oldInfo == newName {
+				in = true
+			}
+		}
+
+		if !in {
+			delList = append(delList, oldInfo)
+		}
+	}
+
+	addList := []string{}
+
+	for _, newName := range roleList {
+		var in bool
+		for _, oldInfo := range oldList {
+			if oldInfo == newName {
+				in = true
+			}
+		}
+
+		if !in {
+			addList = append(addList, newName)
+		}
+	}
+
+	for i := range addList {
+		if !casbin.Enfc.RoleExists(roleList[i]) {
+			return echo.NewHTTPError(400, "paermission not exists:"+roleList[i])
+		}
+
+		casbin.Enfc.AddRoleForUser(sUID, addList[i])
+	}
+
+	for i := range delList {
+		if !casbin.Enfc.RoleExists(roleList[i]) {
+			return echo.NewHTTPError(400, "paermission not exists:"+roleList[i])
+		}
+
+		casbin.Enfc.DeleteRoleForUser(sUID, delList[i])
+	}
+
 	c.Logger().Debug("UserRoleAdd", args)
 
-	return c.JSON(http.StatusOK, casbin.Enfc.AddRoleForUser(args.UID, args.Role))
+	return c.JSON(http.StatusOK, casbin.Enfc.GetRolesForUser(sUID))
 }
 
-// UserRoleDel UserRoleDel
-func UserRoleDel(c echo.Context) error {
+// RoleDel RoleDel
+func RoleDel(c echo.Context) error {
 	args := &casbin.UserRole{}
 	if err := c.Bind(args); err != nil {
 		return err
 	}
 
-	c.Logger().Debug("UserRoleDel", args)
+	// 删除权限关联
 
-	return c.JSON(http.StatusOK, casbin.Enfc.DeleteRoleForUser(args.UID, args.Role))
+	// 删除用户关联
+
+	return c.JSON(http.StatusOK, casbin.Enfc.DeleteRoleByName(args.Role))
 }
 
 // UserPermissions UserPermissions
 func UserPermissions(c echo.Context) error {
 
-	uid := c.FormValue("uid")
+	args := &casbin.UserRole{}
+	if err := c.Bind(args); err != nil {
+		return err
+	}
+
+	return c.JSON(http.StatusOK, casbin.Enfc.UserPermissions(args.UID))
 
 	// uid->role
 	roles := casbin.Enfc.GetRolesForUser(uid)

@@ -1,7 +1,7 @@
 package casbin
 
 import (
-	"unicode"
+	"strconv"
 
 	"github.com/casbin/casbin"
 )
@@ -91,9 +91,9 @@ func (e *Enforcer) GetRoles() []string {
 }
 
 // GetRoleUsers GetRoleUsers
-func (e *Enforcer) GetRoleUsers() []string {
+func (e *Enforcer) GetRoleUsers() map[int64][]string {
 
-	m := map[string]struct{}{}
+	userRolsList := make([]*RolePermission, 0)
 
 	groupPolicys := e.SyncedEnforcer.GetNamedGroupingPolicy("g")
 	for i := range groupPolicys {
@@ -101,16 +101,27 @@ func (e *Enforcer) GetRoleUsers() []string {
 		r.Parse(groupPolicys[i])
 
 		if isInt(r.Role) {
-			m[r.Role] = struct{}{}
+			userRolsList = append(userRolsList, r)
 		}
 	}
 
-	list := make([]string, 0, len(m))
-	for k := range m {
-		list = append(list, k)
+	uidRoles := make(map[int64][]string)
+	for i := range userRolsList {
+		info := userRolsList[i]
+		uid, err := strconv.ParseInt(info.Role, 10, 64)
+		if err != nil {
+			// 不是uid过滤掉不要
+			continue
+		}
+
+		if _, has := uidRoles[uid]; !has {
+			uidRoles[uid] = make([]string, 0)
+		}
+
+		uidRoles[uid] = append(uidRoles[uid], info.Permission)
 	}
 
-	return list
+	return uidRoles
 }
 
 // RolePermissionList RolePermissionList
@@ -160,11 +171,60 @@ func (e *Enforcer) RolePermissionListByPermission(name string) []*RolePermission
 	return list
 }
 
-func isInt(s string) bool {
-	for _, c := range s {
-		if !unicode.IsDigit(c) {
-			return false
-		}
+// RolePermissionListByRole RolePermissionListByRole
+func (e *Enforcer) RolePermissionListByRole(name string) []*RolePermission {
+	permission := e.SyncedEnforcer.GetFilteredGroupingPolicy(0, name)
+
+	list := make([]*RolePermission, len(permission))
+	for i := range permission {
+		info := &RolePermission{}
+		info.Parse(permission[i])
+		list[i] = info
 	}
+	return list
+}
+
+// UIDRoleListByRole UIDRoleListByRole
+func (e *Enforcer) UIDRoleListByRole(name string) []*UserRole {
+	result := e.SyncedEnforcer.GetFilteredGroupingPolicy(1, name)
+
+	list := make([]*UserRole, len(result))
+	for i := range result {
+		info := &UserRole{}
+		info.Parse(result[i])
+		list[i] = info
+	}
+	return list
+}
+
+// RoleExists RoleExists
+func (e *Enforcer) RoleExists(rols string) bool {
+	return len(e.SyncedEnforcer.GetFilteredGroupingPolicy(0, rols)) > 0
+}
+
+// DeleteRoleByName DeleteRoleByName
+func (e *Enforcer) DeleteRoleByName(name string) bool {
+	list := e.SyncedEnforcer.GetFilteredGroupingPolicy(0, name)
+	for i := range list {
+		e.SyncedEnforcer.DeleteRoleForUser(list[i][0], list[i][1])
+	}
+
+	list = e.SyncedEnforcer.GetFilteredGroupingPolicy(1, name)
+	for i := range list {
+		e.SyncedEnforcer.DeleteRoleForUser(list[i][0], list[i][1])
+	}
+
 	return true
+}
+
+// UserPermissions UserPermissions
+func (e *Enforcer) UserPermissions(uid int64) []*Permission {
+	permission = e.SyncedEnforcer.GetPermissionsForUser(strconv.FormatInt(uid, 10))
+	list := make([]*RolePermission, len(permission))
+	for i := range permission {
+		info := &RolePermission{}
+		info.Parse(permission[i])
+		list[i] = info
+	}
+	return list
 }

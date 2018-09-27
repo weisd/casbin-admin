@@ -1,5 +1,9 @@
 package casbin
 
+import (
+	"strconv"
+)
+
 // Permission Permission
 type Permission struct {
 	Name   string `json:"name" form:"name" query:"name"`
@@ -36,8 +40,17 @@ func (p *RolePermission) Parse(fields []string) {
 
 // UserRole UserRole
 type UserRole struct {
-	UID  string `json:"uid" form:"uid" query:"uid"`
+	UID  int64  `json:"uid" form:"uid" query:"uid"`
 	Role string `json:"role" form:"role" query:"role"`
+}
+
+// Parse Parse
+func (p *UserRole) Parse(fields []string) {
+	if len(fields) < 2 {
+		return
+	}
+	p.UID, _ = strconv.ParseInt(fields[0], 10, 64)
+	p.Role = fields[1]
 }
 
 // Request Request
